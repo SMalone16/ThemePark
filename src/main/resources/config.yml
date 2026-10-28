@@ -1,0 +1,18 @@
+# Primary world for the park (matches server/server.properties level-name).
+world: world
+
+# WARNING: On the first enabled startup, replaces existing blocks in the
+# spawn's 70x70 footprint. Back up the world before selecting ThemePark.
+generate-on-first-enable: true
+
+# Six-block-tall invisible BARRIER curtain around the OUTSIDE of the water ring.
+# Enabled at Minecraft time 13000 and removed at 23000 and on plugin disable.
+night-barrier: true
+
+# Slowly carries swimming players clockwise around the continuous water ring.
+river-current: true
+river-current-speed: 0.14
+
+# Test inventory: refill to this count on join/respawn; don't duplicate on login.
+give-test-minecarts: true
+test-minecarts: 4

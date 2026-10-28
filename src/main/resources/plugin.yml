@@ -1,0 +1,15 @@
+name: ThemePark
+main: org.pawling.themepark.ThemeParkPlugin
+version: 1.0.0
+api-version: '1.21'
+description: Protected 70x70 classroom spawn theme park with circular lazy river and roller coaster.
+author: Pawling Classroom
+commands:
+  themepark:
+    description: Park status, roller coaster ride, and administrator rebuild.
+    usage: /themepark [status|ride|rebuild confirm]
+    aliases: [park]
+permissions:
+  themepark.admin:
+    description: Allows rebuilding the park after confirmation.
+    default: op
