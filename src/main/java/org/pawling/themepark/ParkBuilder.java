@@ -149,6 +149,13 @@ public final class ParkBuilder {
             Rail data = (Rail) block.getBlockData();
             data.setShape(shape(previous, current, next));
             block.setBlockData(data, false);
+            // We intentionally place tracks without neighbor physics to protect
+            // our custom curves. Explicitly energize boosters as well.
+            if (block.getType() == Material.POWERED_RAIL
+                    && block.getBlockData() instanceof org.bukkit.block.data.Powerable powered) {
+                powered.setPowered(true);
+                block.setBlockData(powered, false);
+            }
         }
     }
 

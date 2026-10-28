@@ -82,7 +82,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
                     state.getInt("center-z"), state.getInt("floor-y"));
             world.setSpawnLocation(park.centerX(), park.floorY() + 2, park.centerZ());
             getLogger().info("Restored built ThemePark without altering its terrain.");
-            applyBarrier(isNight(world), true);
+            applyBarrier(getConfig().getBoolean("night-barrier", true) && isNight(world), true);
         } else if (getConfig().getBoolean("generate-on-first-enable", true)) {
             Location spawn = world.getSpawnLocation();
             int floor = Math.min(world.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ()),
@@ -114,7 +114,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             } catch (IOException error) {
                 getLogger().severe("Could not save park-state.yml; generation may repeat: " + error);
             }
-            applyBarrier(isNight(area.world()), true);
+            applyBarrier(getConfig().getBoolean("night-barrier", true) && isNight(area.world()), true);
         });
     }
 
