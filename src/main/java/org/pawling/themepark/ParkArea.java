@@ -7,6 +7,16 @@ import org.bukkit.block.Block;
 /** The park occupies exactly 70 x 70 blocks; the X/Z offsets are -35 through +34. */
 public record ParkArea(World world, int centerX, int centerZ, int floorY) {
     public static final int SIZE = 70;
+    /** Offset centers of four temporary night-survival shelters. */
+    public static final int[][] HIDEOUTS = {{-17, -12}, {17, -12}, {-17, 12}, {17, 12}};
+
+    public boolean nearHideout(int x, int z, int margin) {
+        for (int[] offset : HIDEOUTS) {
+            if (Math.abs(x - (centerX + offset[0])) <= margin
+                    && Math.abs(z - (centerZ + offset[1])) <= margin) return true;
+        }
+        return false;
+    }
 
     public int minX() { return centerX - 35; }
     public int maxX() { return centerX + 34; }
