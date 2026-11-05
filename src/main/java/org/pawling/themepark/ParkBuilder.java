@@ -39,6 +39,7 @@ public final class ParkBuilder {
                         buildLandscape(area);
                         buildRollerCoaster(area);
                         buildStaircaseAndStation(area);
+                        buildExtras(area);
                         area.world().setSpawnLocation(area.centerX(), area.floorY() + 2, area.centerZ());
                         plugin.getLogger().info("ThemePark generated 70x70 park in "
                                 + area.world().getName() + " at " + area.centerX()
@@ -271,6 +272,61 @@ public final class ParkBuilder {
         for (int dx : new int[] {-2, 2}) {
             place(world, area.centerX() + dx, floor + 10, area.centerZ() - 30,
                     Material.SEA_LANTERN);
+        }
+    }
+
+
+    /** New attractions can be installed into a saved park without re-flattening it. */
+    public void buildExtras(ParkArea area) {
+        buildCarousel(area);
+        buildHideouts(area);
+    }
+
+    private void buildCarousel(ParkArea area) {
+        World world = area.world();
+        int cx = area.centerX() + 11;
+        int cz = area.centerZ();
+        int floor = area.floorY();
+        for (int dx = -6; dx <= 6; dx++) {
+            for (int dz = -6; dz <= 6; dz++) {
+                int r2 = dx * dx + dz * dz;
+                if (r2 > 36) continue;
+                Material base = r2 >= 25 ? Material.GOLD_BLOCK
+                        : ((dx + dz) % 2 == 0 ? Material.RED_CONCRETE : Material.WHITE_CONCRETE);
+                place(world, cx + dx, floor, cz + dz, base);
+                if (r2 <= 25) {
+                    // A striped canopy stays fixed while visible seat blocks orbit beneath it.
+                    place(world, cx + dx, floor + 5, cz + dz,
+                            (dx + dz) % 2 == 0 ? Material.RED_CONCRETE : Material.WHITE_CONCRETE);
+                }
+            }
+        }
+        for (int y = floor + 1; y <= floor + 4; y++) {
+            place(world, cx, y, cz, Material.QUARTZ_PILLAR);
+        }
+        place(world, cx, floor + 6, cz, Material.GLOWSTONE);
+    }
+
+    private void buildHideouts(ParkArea area) {
+        World world = area.world();
+        int floor = area.floorY();
+        for (int[] offset : ParkArea.HIDEOUTS) {
+            int cx = area.centerX() + offset[0];
+            int cz = area.centerZ() + offset[1];
+            // Doors always face the plaza so players can duck in from the paths.
+            int doorwayZ = offset[1] > 0 ? -2 : 2;
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dz = -2; dz <= 2; dz++) {
+                    place(world, cx + dx, floor, cz + dz, Material.STONE_BRICKS);
+                    boolean wall = Math.abs(dx) == 2 || Math.abs(dz) == 2;
+                    boolean door = dx == 0 && dz == doorwayZ;
+                    for (int dy = 1; dy <= 2; dy++) {
+                        place(world, cx + dx, floor + dy, cz + dz,
+                                wall && !door ? Material.OAK_PLANKS : Material.AIR);
+                    }
+                    place(world, cx + dx, floor + 3, cz + dz, Material.DARK_OAK_SLAB);
+                }
+            }
         }
     }
 
