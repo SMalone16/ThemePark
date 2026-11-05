@@ -83,7 +83,7 @@ public final class ParkSurvival implements Listener {
     private List<Entity> tagged(String tag) {
         List<Entity> matches = new ArrayList<>();
         for (Entity entity : area.world().getNearbyEntities(area.spawn(), 40, 30, 40)) {
-            if (entity.getScoreboardTags().contains(tag) && area.contains(entity.getLocation())) {
+            if (entity.getScoreboardTags().contains(tag)) {
                 matches.add(entity);
             }
         }
@@ -174,6 +174,7 @@ public final class ParkSurvival implements Listener {
         for (int i = existingGolems; i < guards.length; i++) {
             IronGolem golem = area.world().spawn(ground(guards[i][0], guards[i][1]), IronGolem.class);
             golem.addScoreboardTag(GOLEM);
+            golem.setPlayerCreated(false);
             golem.setRemoveWhenFarAway(false);
             golem.setCustomName("§aPark Security");
             golem.setCustomNameVisible(true);
