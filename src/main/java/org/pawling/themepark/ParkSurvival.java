@@ -315,8 +315,10 @@ public final class ParkSurvival implements Listener {
     public void onTarget(EntityTargetLivingEntityEvent event) {
         if (event.getEntity().getScoreboardTags().contains(GOLEM)) {
             if (night) {
-                if (!(event.getTarget() instanceof Player player)
-                        || !area.contains(player.getLocation())) {
+                // Null is a legitimate target reset when visitors leave the park.
+                if (event.getTarget() != null
+                        && (!(event.getTarget() instanceof Player player)
+                        || !area.contains(player.getLocation()))) {
                     event.setCancelled(true);
                 }
             } else if (event.getTarget() instanceof Player) {
