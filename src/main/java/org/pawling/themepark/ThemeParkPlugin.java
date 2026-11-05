@@ -44,6 +44,8 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
     private Boolean barrierActive;
     private File stateFile;
     private YamlConfiguration state;
+    private ParkSurvival survival;
+    private ParkRides rides;
 
     @Override
     public void onEnable() {
@@ -63,6 +65,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
 
     @Override
     public void onDisable() {
+        stopSystems();
         // Never strand permanent barrier blocks when this optional plugin is disabled.
         if (park != null && !building) applyBarrier(false, true);
     }
@@ -83,6 +86,17 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             world.setSpawnLocation(park.centerX(), park.floorY() + 2, park.centerZ());
             getLogger().info("Restored built ThemePark without altering its terrain.");
             applyBarrier(getConfig().getBoolean("night-barrier", true) && isNight(world), true);
+            // Add new attractions once to old saved parks, without leveling them again.
+            if (state.getInt("extras-version", 0) < 1) {
+                new ParkBuilder(this).buildExtras(park);
+                state.set("extras-version", 1);
+                try {
+                    state.save(stateFile);
+                } catch (IOException error) {
+                    getLogger().severe("Could not persist ThemePark attraction upgrade: " + error);
+                }
+            }
+            startSystems();
         } else if (getConfig().getBoolean("generate-on-first-enable", true)) {
             Location spawn = world.getSpawnLocation();
             int floor = Math.min(world.getHighestBlockYAt(spawn.getBlockX(), spawn.getBlockZ()),
@@ -96,6 +110,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
 
     private void beginBuild(ParkArea area) {
         if (building) return;
+        stopSystems();
         park = area;
         building = true;
         barrierActive = null;
@@ -109,13 +124,39 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             state.set("center-z", area.centerZ());
             state.set("floor-y", area.floorY());
             state.set("size", ParkArea.SIZE);
+            state.set("extras-version", 1);
             try {
                 state.save(stateFile);
             } catch (IOException error) {
                 getLogger().severe("Could not save park-state.yml; generation may repeat: " + error);
             }
             applyBarrier(getConfig().getBoolean("night-barrier", true) && isNight(area.world()), true);
+            startSystems();
         });
+    }
+
+    private void startSystems() {
+        if (park == null || building) return;
+        stopSystems();
+        survival = new ParkSurvival(this, park);
+        rides = new ParkRides(this, park);
+        Bukkit.getPluginManager().registerEvents(survival, this);
+        Bukkit.getPluginManager().registerEvents(rides, this);
+        survival.start();
+        rides.start();
+    }
+
+    private void stopSystems() {
+        if (rides != null) {
+            rides.stop();
+            org.bukkit.event.HandlerList.unregisterAll(rides);
+            rides = null;
+        }
+        if (survival != null) {
+            survival.stop();
+            org.bukkit.event.HandlerList.unregisterAll(survival);
+            survival = null;
+        }
     }
 
     private boolean isNight(World world) {
@@ -318,30 +359,28 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
                 sender.sendMessage("§aThemePark: " + (building ? "generating" : "ready")
                         + " • 70x70 • world=" + park.world().getName()
                         + " • center=" + park.centerX() + "," + park.floorY() + "," + park.centerZ()
-                        + " • night barrier=" + (Boolean.TRUE.equals(barrierActive) ? "ON" : "OFF"));
+                        + " • night barrier=" + (Boolean.TRUE.equals(barrierActive) ? "ON" : "OFF")
+                        + " • enemies=" + (survival == null ? 0 : survival.enemyCount()));
             }
             return true;
         }
 
-        if (sub.equals("ride")) {
+        if (sub.equals("ride") || sub.equals("carousel") || sub.equals("exit")) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage("Only a player can ride the coaster.");
+                sender.sendMessage("Only players can use park rides.");
                 return true;
             }
-            if (park == null || building) {
-                player.sendMessage("§eThe roller coaster is not ready yet.");
+            if (rides == null || park == null || building) {
+                player.sendMessage("§eThemePark rides are not ready yet.");
                 return true;
             }
-            if (!park.world().equals(player.getWorld())) {
-                player.sendMessage("§eEnter the ThemePark world first.");
-                return true;
+            if (sub.equals("exit")) {
+                if (!rides.exit(player)) player.sendMessage("§eYou are not on a ThemePark ride.");
+            } else if (sub.equals("carousel")) {
+                rides.boardCarousel(player);
+            } else {
+                rides.boardCoaster(player);
             }
-            Location start = park.boardingPoint();
-            Minecart cart = park.world().spawn(start, Minecart.class);
-            cart.setMaxSpeed(0.7);
-            cart.addPassenger(player);
-            cart.setVelocity(new Vector(0.35, 0, 0));
-            player.sendMessage("§aThemePark roller coaster: enjoy the ride!");
             return true;
         }
 
@@ -377,7 +416,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             return true;
         }
 
-        sender.sendMessage("§eUsage: /themepark [status|ride|rebuild confirm]");
+        sender.sendMessage("§eUsage: /themepark [status|ride|carousel|exit|rebuild confirm]");
         return true;
     }
 }
