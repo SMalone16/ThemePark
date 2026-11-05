@@ -1,6 +1,8 @@
 package org.pawling.themepark;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -13,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -36,6 +39,7 @@ public final class ParkRides implements Listener {
     private final ThemeParkPlugin plugin;
     private final ParkArea area;
     private final List<ArmorStand> seats = new ArrayList<>();
+    private final Map<UUID, Integer> lastRideClick = new HashMap<>();
     private BukkitTask task;
     private double rotation;
 
@@ -86,6 +90,7 @@ public final class ParkRides implements Listener {
             entity.remove();
         }
         seats.clear();
+        lastRideClick.clear();
     }
 
     private List<Entity> nearby() {
@@ -186,22 +191,35 @@ public final class ParkRides implements Listener {
                         area.centerZ() + 0.5);
     }
 
+    /** Eagler/Spigot may send both generic and armor-stand-specific clicks. */
+    private boolean duplicateRideClick(Player player) {
+        int tick = Bukkit.getCurrentTick();
+        Integer previous = lastRideClick.put(player.getUniqueId(), tick);
+        return previous != null && previous == tick;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onArmorStandClick(PlayerInteractAtEntityEvent event) {
+        onEntityClick(event);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityClick(PlayerInteractEntityEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) return;
         Player player = event.getPlayer();
-        if (isRiding(player)) {
-            event.setCancelled(true);
-            exit(player);
-            return;
-        }
         Entity clicked = event.getRightClicked();
-        if (clicked.getScoreboardTags().contains(SEAT_TAG)) {
-            event.setCancelled(true);
+        boolean rideClicked = clicked.getScoreboardTags().contains(SEAT_TAG)
+                || clicked.getScoreboardTags().contains(COASTER_TAG);
+        if (!rideClicked && !isRiding(player)) return;
+        event.setCancelled(true);
+        if (duplicateRideClick(player)) return;
+        if (isRiding(player)) {
+            exit(player);
+        } else if (clicked.getScoreboardTags().contains(SEAT_TAG)) {
             boardCarousel(player);
-        } else if (clicked.getScoreboardTags().contains(COASTER_TAG)) {
-            event.setCancelled(true);
-            if (player.getVehicle() == null) clicked.addPassenger(player);
+        } else if (clicked.getScoreboardTags().contains(COASTER_TAG)
+                && player.getVehicle() == null) {
+            clicked.addPassenger(player);
         }
     }
 
@@ -213,7 +231,7 @@ public final class ParkRides implements Listener {
         Player player = event.getPlayer();
         if (isRiding(player)) {
             event.setCancelled(true);
-            exit(player);
+            if (!duplicateRideClick(player)) exit(player);
             return;
         }
         if (event.getClickedBlock() == null || !area.contains(event.getClickedBlock())) return;
@@ -224,14 +242,14 @@ public final class ParkRides implements Listener {
         if (x * x + z * z <= 36 && (material == Material.RED_CONCRETE
                 || material == Material.WHITE_CONCRETE || material == Material.GOLD_BLOCK)) {
             event.setCancelled(true);
-            boardCarousel(player);
+            if (!duplicateRideClick(player)) boardCarousel(player);
         } else if (Math.abs(clicked.getX() - area.centerX()) < 3
                 && clicked.getZ() >= area.centerZ() - 32
                 && clicked.getZ() <= area.centerZ() - 29
                 && clicked.getY() >= area.floorY() + 10
                 && material == Material.STONE_BRICKS) {
             event.setCancelled(true);
-            boardCoaster(player);
+            if (!duplicateRideClick(player)) boardCoaster(player);
         }
     }
 
