@@ -116,6 +116,7 @@ public final class ParkSurvival implements Listener {
             }
         } else {
             removeTagged(MONSTER);
+            new ParkBuilder(plugin).repairHideouts(area);
             for (Entity entity : tagged(GOLEM)) {
                 if (entity instanceof IronGolem golem) golem.setTarget(null);
             }
