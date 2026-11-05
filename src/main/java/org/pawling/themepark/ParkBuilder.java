@@ -332,6 +332,8 @@ public final class ParkBuilder {
                     place(world, cx + dx, floor + 3, cz + dz, Material.DARK_OAK_SLAB);
                 }
             }
+            // Closeable gate buys players time; monsters eventually break the walls.
+            place(world, cx, floor + 1, cz + doorwayZ, Material.OAK_FENCE_GATE);
         }
     }
 
