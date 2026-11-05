@@ -72,6 +72,11 @@ public final class ParkSurvival implements Listener {
     }
 
     public int enemyCount() {
+        // Golems themselves count as hostiles while they are hunting visitors.
+        return tagged(MONSTER).size() + (night ? tagged(GOLEM).size() : 0);
+    }
+
+    private int monsterCount() {
         return tagged(MONSTER).size();
     }
 
@@ -139,9 +144,9 @@ public final class ParkSurvival implements Listener {
         if (night != isNight()) transition();
         seconds++;
         if (night) {
-            if (seconds % 7 == 0 && enemyCount() < targetEnemies()) {
+            if (seconds % 7 == 0 && monsterCount() < targetEnemies()) {
                 // A limited trickle of replacements prevents an empty, boring final minute.
-                spawnEnemies(Math.min(2, targetEnemies() - enemyCount()));
+                spawnEnemies(Math.min(2, targetEnemies() - monsterCount()));
             }
             directGolems();
             if (seconds % 2 == 0) damageHideouts();
@@ -184,10 +189,16 @@ public final class ParkSurvival implements Listener {
         for (int i = 0; i < amount; i++) {
             Location location = findEnemySpawn();
             if (location == null) break;
-            EntityType type = switch (random.nextInt(5)) {
-                case 0 -> EntityType.WITCH;
-                case 1, 2 -> EntityType.SKELETON;
-                default -> EntityType.ZOMBIE;
+            // An opening wave always includes all three mob types.
+            EntityType type = switch (i) {
+                case 0 -> EntityType.ZOMBIE;
+                case 1 -> EntityType.SKELETON;
+                case 2 -> EntityType.WITCH;
+                default -> switch (random.nextInt(5)) {
+                    case 0 -> EntityType.WITCH;
+                    case 1, 2 -> EntityType.SKELETON;
+                    default -> EntityType.ZOMBIE;
+                };
             };
             Entity spawned = area.world().spawnEntity(location, type);
             spawned.addScoreboardTag(MONSTER);
