@@ -42,6 +42,7 @@ public final class ParkSurvival implements Listener {
     private final BossBar bossBar;
     private BukkitTask task;
     private boolean night;
+    private boolean initialized;
     private int seconds;
 
     public ParkSurvival(ThemeParkPlugin plugin, ParkArea area) {
@@ -126,14 +127,17 @@ public final class ParkSurvival implements Listener {
                 if (entity instanceof IronGolem golem) golem.setTarget(null);
             }
             replenishDaytime();
-            for (Player player : area.world().getPlayers()) {
-                if (area.contains(player.getLocation())) {
-                    player.sendTitle("§e§lDAWN", "§aYou survived the night!", 10, 50, 15);
+            if (initialized) {
+                for (Player player : area.world().getPlayers()) {
+                    if (area.contains(player.getLocation())) {
+                        player.sendTitle("§e§lDAWN", "§aYou survived the night!", 10, 50, 15);
+                    }
                 }
             }
             bossBar.removeAll();
             bossBar.setVisible(false);
         }
+        initialized = true;
     }
 
     private int targetEnemies() {
