@@ -307,6 +307,11 @@ public final class ParkBuilder {
         place(world, cx, floor + 6, cz, Material.GLOWSTONE);
     }
 
+    /** Restores only temporary shelter blocks at dawn, leaving the rest of the park intact. */
+    public void repairHideouts(ParkArea area) {
+        buildHideouts(area);
+    }
+
     private void buildHideouts(ParkArea area) {
         World world = area.world();
         int floor = area.floorY();
