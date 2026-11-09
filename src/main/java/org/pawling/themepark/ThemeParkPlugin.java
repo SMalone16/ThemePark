@@ -2,8 +2,6 @@ package org.pawling.themepark;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -12,7 +10,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,11 +27,7 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Vector;
 
 /** Self-contained classroom park for the Paper backend, not the Velocity proxy. */
 public final class ThemeParkPlugin extends JavaPlugin implements Listener, CommandExecutor {
@@ -46,6 +39,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
     private YamlConfiguration state;
     private ParkSurvival survival;
     private ParkRides rides;
+    private ParkGames games;
 
     @Override
     public void onEnable() {
@@ -87,9 +81,11 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             getLogger().info("Restored built ThemePark without altering its terrain.");
             applyBarrier(getConfig().getBoolean("night-barrier", true) && isNight(world), true);
             // Add new attractions once to old saved parks, without leveling them again.
-            if (state.getInt("extras-version", 0) < 1) {
-                new ParkBuilder(this).buildExtras(park);
-                state.set("extras-version", 1);
+            if (state.getInt("extras-version", 0) < 2) {
+                ParkBuilder upgrades = new ParkBuilder(this);
+                if (state.getInt("extras-version", 0) < 1) upgrades.buildExtras(park);
+                upgrades.upgradeCoasterAndArcade(park);
+                state.set("extras-version", 2);
                 try {
                     state.save(stateFile);
                 } catch (IOException error) {
@@ -124,7 +120,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             state.set("center-z", area.centerZ());
             state.set("floor-y", area.floorY());
             state.set("size", ParkArea.SIZE);
-            state.set("extras-version", 1);
+            state.set("extras-version", 2);
             try {
                 state.save(stateFile);
             } catch (IOException error) {
@@ -140,13 +136,21 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
         stopSystems();
         survival = new ParkSurvival(this, park);
         rides = new ParkRides(this, park);
+        games = new ParkGames(this, park);
         Bukkit.getPluginManager().registerEvents(survival, this);
         Bukkit.getPluginManager().registerEvents(rides, this);
+        Bukkit.getPluginManager().registerEvents(games, this);
         survival.start();
         rides.start();
+        games.start();
     }
 
     private void stopSystems() {
+        if (games != null) {
+            games.stop();
+            org.bukkit.event.HandlerList.unregisterAll(games);
+            games = null;
+        }
         if (rides != null) {
             rides.stop();
             org.bukkit.event.HandlerList.unregisterAll(rides);
@@ -317,38 +321,6 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
         }
     }
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        Bukkit.getScheduler().runTaskLater(this, () -> {
-            if (player.isOnline()) giveTestCarts(player);
-        }, 20L);
-    }
-
-    @EventHandler
-    public void onRespawn(PlayerRespawnEvent event) {
-        Player player = event.getPlayer();
-        Bukkit.getScheduler().runTaskLater(this, () -> {
-            if (player.isOnline()) giveTestCarts(player);
-        }, 2L);
-    }
-
-    /** Replenish up to four minecarts; repeated logins never create unlimited stacks. */
-    private void giveTestCarts(Player player) {
-        if (!getConfig().getBoolean("give-test-minecarts", true)) return;
-        int target = Math.max(0, Math.min(4, getConfig().getInt("test-minecarts", 4)));
-        int has = 0;
-        for (ItemStack stack : player.getInventory().getContents()) {
-            if (stack != null && stack.getType() == Material.MINECART) has += stack.getAmount();
-        }
-        if (has >= target) return;
-        Map<Integer, ItemStack> remaining = player.getInventory().addItem(
-                new ItemStack(Material.MINECART, target - has));
-        if (!remaining.isEmpty()) {
-            player.sendMessage("§eThemePark: Free an inventory slot to receive your test minecarts.");
-        }
-    }
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String sub = args.length == 0 ? "status" : args[0].toLowerCase();
@@ -365,7 +337,8 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             return true;
         }
 
-        if (sub.equals("ride") || sub.equals("carousel") || sub.equals("exit")) {
+        if (sub.equals("ride") || sub.equals("carousel") || sub.equals("exit")
+                || sub.equals("strength") || sub.equals("archery")) {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage("Only players can use park rides.");
                 return true;
@@ -378,8 +351,12 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
                 if (!rides.exit(player)) player.sendMessage("§eYou are not on a ThemePark ride.");
             } else if (sub.equals("carousel")) {
                 rides.boardCarousel(player);
-            } else {
+            } else if (sub.equals("ride")) {
                 rides.boardCoaster(player);
+            } else if (sub.equals("strength")) {
+                if (games != null) games.startStrength(player);
+            } else if (sub.equals("archery")) {
+                if (games != null) games.startArchery(player);
             }
             return true;
         }
@@ -416,7 +393,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             return true;
         }
 
-        sender.sendMessage("§eUsage: /themepark [status|ride|carousel|exit|rebuild confirm]");
+        sender.sendMessage("§eUsage: /themepark [status|ride|carousel|strength|archery|exit|rebuild confirm]");
         return true;
     }
 }
