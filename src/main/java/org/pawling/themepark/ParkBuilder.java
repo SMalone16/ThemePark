@@ -221,6 +221,11 @@ public final class ParkBuilder {
         platform(area, -19, 16, Material.EMERALD_BLOCK);
         platform(area, -9, 12, Material.IRON_BLOCK);
         platform(area, -22, -8, Material.LAPIS_BLOCK);
+        sign(area, -2, -16, "COASTER", "PRESS R", "1 trip", "Auto exit");
+        sign(area, -18, 17, "EXIT", "Ride complete", "Thanks", "for riding!");
+        sign(area, -8, 13, "PICKAXE", "PRESS R", "Hit target", "Win prizes");
+        sign(area, -21, -7, "ARCHERY", "PRESS R", "3 shots", "Hit target!");
+        sign(area, 18, 0, "CAROUSEL", "PRESS R", "One spin", "Auto exit");
         World world = area.world();
         int x = area.centerX() + 21;
         int z = area.centerZ() - 8;
@@ -233,6 +238,20 @@ public final class ParkBuilder {
                 place(world, x, area.floorY() + dy, z + dz, color);
                 place(world, x + 1, area.floorY() + dy, z + dz, Material.STONE_BRICKS);
             }
+        }
+    }
+
+    private void sign(ParkArea area, int dx, int dz,
+                      String line1, String line2, String line3, String line4) {
+        Block block = area.world().getBlockAt(area.centerX() + dx,
+                area.floorY() + 1, area.centerZ() + dz);
+        block.setType(Material.OAK_SIGN, false);
+        if (block.getState() instanceof org.bukkit.block.Sign sign) {
+            sign.setLine(0, line1);
+            sign.setLine(1, line2);
+            sign.setLine(2, line3);
+            sign.setLine(3, line4);
+            sign.update(true, false);
         }
     }
 
