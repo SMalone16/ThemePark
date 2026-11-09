@@ -143,17 +143,14 @@ public final class ParkBuilder {
     private void buildRollerCoaster(ParkArea area) {
         List<CoasterCourse.Node> route = new CoasterCourse(area).nodes();
         World world = area.world();
-        for (int i = 0; i < route.size(); i++) {
+        int uniqueRails = route.size() - 1; // Final node repeats the first, exactly once.
+        for (int i = 0; i < uniqueRails; i++) {
             CoasterCourse.Node current = route.get(i);
-            CoasterCourse.Node previous = route.get(Math.max(0, i - 1));
-            CoasterCourse.Node next = route.get(Math.min(route.size() - 1, i + 1));
+            CoasterCourse.Node previous = route.get(i == 0 ? uniqueRails - 1 : i - 1);
+            CoasterCourse.Node next = route.get(i + 1);
 
-            BlockFace towardPrevious = (i == 0)
-                    ? direction(current, next).getOppositeFace()
-                    : direction(current, previous);
-            BlockFace towardNext = (i == route.size() - 1)
-                    ? direction(current, previous).getOppositeFace()
-                    : direction(current, next);
+            BlockFace towardPrevious = direction(current, previous);
+            BlockFace towardNext = direction(current, next);
             boolean corner = towardPrevious != towardNext.getOppositeFace();
             boolean ascending = previous.y() > current.y() || next.y() > current.y();
             boolean powered = !corner && (ascending || i % 7 == 0);
@@ -218,11 +215,11 @@ public final class ParkBuilder {
 
     public void buildArcade(ParkArea area) {
         platform(area, -3, -17, Material.GOLD_BLOCK);
-        platform(area, -19, 16, Material.EMERALD_BLOCK);
+        platform(area, -3, -25, Material.EMERALD_BLOCK);
         platform(area, -9, 12, Material.IRON_BLOCK);
         platform(area, -22, -8, Material.LAPIS_BLOCK);
         sign(area, -2, -16, "COASTER", "PRESS R", "1 trip", "Auto exit");
-        sign(area, -18, 17, "EXIT", "Ride complete", "Thanks", "for riding!");
+        sign(area, -2, -24, "EXIT", "Ride complete", "Thanks", "for riding!");
         sign(area, -8, 13, "PICKAXE", "PRESS R", "Hit target", "Win prizes");
         sign(area, -21, -7, "ARCHERY", "PRESS R", "3 shots", "Hit target!");
         sign(area, 18, 0, "CAROUSEL", "PRESS R", "One spin", "Auto exit");
