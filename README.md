@@ -7,7 +7,7 @@ A **Paper 1.21.11** plugin designed for [SMalone16/Eaglercraft-1.21.11-Server](h
 When selected in the classroom plugin menu for the first time, ThemePark builds a **70 × 70 block square centered on the Overworld spawn** (offsets -35..+34 on X and Z). It flattens the footprint to a common Y level, lays a solid stone floor, and adds dirt paths and a stone-brick spawn plaza. It then creates:
 
 - **Lazy river:** a circular, two-block-deep, ~6-block-wide continuous water ring near the edge, with stone-brick borders and a gentle **clockwise swimmer current** (configurable).
-- **One-lap coaster:** a validated 175-block rail course with climbs, drops and interior 90-degree turns. A scripted visible minecart follows every rail and ejects its rider automatically at a separate southwest exit. No personal carts are needed.
+- **One-lap coaster:** a validated 245-point closed rail loop with climbs, drops and interior 90-degree turns. A scripted visible minecart follows every rail and ejects its rider automatically at a separate emerald exit platform across the track from the entrance. No personal carts are needed.
 
 - **Protected park:** block breaking/placing, bucket changes, burning, freezing, fluid spread, explosions, entity block changes, and piston changes inside the footprint are blocked. Ordinary minecart interaction remains usable.
 - **Carousel:** four block-mounted seats each travel one full revolution and then automatically eject their riders.
