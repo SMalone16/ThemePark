@@ -13,11 +13,11 @@ final class CoasterCourseTest {
         ParkArea area = new ParkArea(null, 0, 0, 80);
         List<CoasterCourse.Node> nodes = new CoasterCourse(area).nodes();
 
-        assertEquals(175, nodes.size());
+        assertEquals(245, nodes.size());
         assertEquals(-3, nodes.get(0).x());
         assertEquals(-22, nodes.get(0).z());
-        assertEquals(-19, nodes.get(nodes.size() - 1).x());
-        assertEquals(18, nodes.get(nodes.size() - 1).z());
+        assertEquals(-3, nodes.get(nodes.size() - 1).x());
+        assertEquals(-22, nodes.get(nodes.size() - 1).z());
         assertEquals(92, nodes.get(0).y());
 
         Set<String> unique = new HashSet<>();
@@ -26,7 +26,11 @@ final class CoasterCourseTest {
         int maxHeight = Integer.MIN_VALUE;
         for (int i = 0; i < nodes.size(); i++) {
             CoasterCourse.Node current = nodes.get(i);
-            assertTrue(unique.add(current.x() + "," + current.z()), "No repeated track footprint");
+            if (i == nodes.size() - 1) {
+                assertEquals(nodes.get(0), current, "Final rail must close the loop");
+            } else {
+                assertTrue(unique.add(current.x() + "," + current.z()), "No duplicate nonterminal rail");
+            }
             assertTrue(area.contains(current.x(), current.z()), "All rail blocks remain in park");
             maxHeight = Math.max(maxHeight, current.y());
             if (i > 0) {
@@ -43,7 +47,7 @@ final class CoasterCourseTest {
                         || (current.z() - previous.z()) != (next.z() - current.z())) turns++;
             }
         }
-        assertEquals(8, turns, "Multiple 90-degree turns through the park");
+        assertEquals(12, turns, "Multiple 90-degree turns through and around the park");
         assertTrue(maxHeight >= 96, "Course climbs at least 4 blocks");
         assertTrue(changesInElevation >= 12, "Course repeatedly climbs and drops");
     }
