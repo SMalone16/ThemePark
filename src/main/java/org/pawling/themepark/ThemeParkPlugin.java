@@ -28,6 +28,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 /** Self-contained classroom park for the Paper backend, not the Velocity proxy. */
 public final class ThemeParkPlugin extends JavaPlugin implements Listener, CommandExecutor {
