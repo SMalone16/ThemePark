@@ -9,16 +9,17 @@ import org.bukkit.Location;
 /**
  * Single-use elevated course. Every node is an adjacent rail block; turns are
  * orthogonal and all changes in height are one block per horizontal step.
- * Open-ended by design: the passenger boards at the north entrance and exits
- * after the full course at the south-west station.
+ * A genuine closed loop: passengers complete all 245 sampled rail positions,
+ * then dismount at the separate platform across the track from the entrance.
  */
 public final class CoasterCourse {
     private static final int[][] WAYPOINTS = {
         {-3, -22}, {20, -22}, {20, -15}, {-17, -15},
         {-17, -2}, {-6, -2}, {-6, 5}, {19, 5},
-        {19, 18}, {-19, 18}
+        {19, 18}, {-25, 18}, {-25, -23},
+        {-4, -23}, {-4, -22}, {-3, -22}
     };
-    private static final int[] HILLS = {3, 0, 4, 2, 0, 0, 4, 2, 4};
+    private static final int[] HILLS = {3, 0, 4, 2, 0, 0, 4, 2, 4, 4, 3, 0, 0};
 
     public record Node(int x, int y, int z) {
         public Location position(ParkArea area) {
@@ -70,7 +71,10 @@ public final class CoasterCourse {
                 || previous.y != finish.y) {
             throw new IllegalStateException("Invalid final coaster rail");
         }
-        result.add(finish);
+        if (!finish.equals(result.get(0))) {
+            throw new IllegalStateException("Coaster must close at the first rail");
+        }
+        result.add(finish); // Deliberate final duplicate for one complete lap.
         nodes = List.copyOf(result);
     }
 
