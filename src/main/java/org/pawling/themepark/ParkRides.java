@@ -273,8 +273,8 @@ public final class ParkRides implements Listener {
     }
 
     private Location coasterExit() {
-        return new Location(area.world(), area.centerX() - 19 + 0.5,
-                area.floorY() + 1.3, area.centerZ() + 16 + 0.5);
+        return new Location(area.world(), area.centerX() - 3 + 0.5,
+                area.floorY() + 1.3, area.centerZ() - 25 + 0.5);
     }
 
     private Location carouselExit() {
