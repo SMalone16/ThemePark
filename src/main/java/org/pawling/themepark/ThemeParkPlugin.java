@@ -27,6 +27,7 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
@@ -322,9 +323,27 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
         }
     }
 
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            if (player.isOnline() && park != null && park.contains(player.getLocation())) {
+                player.sendMessage("§6§lThemePark §ePress R on a colored entrance platform.");
+                player.sendMessage("§7In Options > Controls, bind 'Swap Item With Offhand' to R.");
+                player.sendMessage("§7Alternatively right-click the platform or use /themepark help.");
+            }
+        }, 60L);
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String sub = args.length == 0 ? "status" : args[0].toLowerCase();
+        if (sub.equals("help")) {
+            sender.sendMessage("§6ThemePark: §eBind Swap Item With Offhand to R in Options > Controls.");
+            sender.sendMessage("§eGold = coaster | Carousel = one spin | Iron = strength | Blue = archery.");
+            sender.sendMessage("§7Commands: /themepark [ride|carousel|strength|archery|exit|status]");
+            return true;
+        }
         if (sub.equals("status")) {
             if (park == null) {
                 sender.sendMessage("§eThemePark has not initialized yet.");
@@ -394,7 +413,7 @@ public final class ThemeParkPlugin extends JavaPlugin implements Listener, Comma
             return true;
         }
 
-        sender.sendMessage("§eUsage: /themepark [status|ride|carousel|strength|archery|exit|rebuild confirm]");
+        sender.sendMessage("§eUsage: /themepark [help|status|ride|carousel|strength|archery|exit|rebuild confirm]");
         return true;
     }
 }
