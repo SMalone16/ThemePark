@@ -2,12 +2,12 @@ name: ThemePark
 main: org.pawling.themepark.ThemeParkPlugin
 version: 1.0.0
 api-version: '1.21'
-description: Protected 70x70 park with rides and a day/night survival challenge.
+description: 70x70 theme park with scripted single-lap rides, survival, strength and archery prizes.
 author: Pawling Classroom
 commands:
   themepark:
-    description: Park status, coaster, carousel, exit, and administrator rebuild.
-    usage: /themepark [status|ride|carousel|exit|rebuild confirm]
+    description: Coaster, carousel, prize attractions, exit, status, and administrator rebuild.
+    usage: /themepark [status|ride|carousel|strength|archery|exit|rebuild confirm]
     aliases: [park]
 permissions:
   themepark.admin:

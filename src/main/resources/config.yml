@@ -13,13 +13,15 @@ night-barrier: true
 river-current: true
 river-current-speed: 0.14
 
-# Test inventory: refill to this count on join/respawn; don't duplicate on login.
-give-test-minecarts: true
-test-minecarts: 4
-
 # Night survival (park-only tagged mobs, without touching other plugins' spawns).
 # Minecraft time 13000-23000 is hostile; sunrise removes enemies and restores cover.
 night-enemies: 16
 
-# Four rider-mounted, legacy-client-compatible carousel seats orbit a fixed center.
-carousel-degrees-per-second: 35.0
+# A carousel rider is ejected after one full revolution.
+carousel-degrees-per-second: 24.0
+
+# Scripted coaster speed; every tick follows the physical rail route exactly.
+coaster-blocks-per-tick: 0.46
+
+# To press R, rebind Minecraft's Swap Item With Offhand control to R.
+# Right-clicking an entrance platform or using /themepark commands also works.
