@@ -33,6 +33,23 @@ The world is modified only on the first successful plugin generation or when an 
 
 **Existing-world migration:** `extras-version: 2` upgrades an existing park **without flattening it**. Old perimeter rails are selectively replaced by the new interior coaster; stalls and target are constructed inside the park. Backup first, because the attraction footprints are modified. Previous minecarts in student inventories are not removed, but the plugin no longer gives new starter minecarts or accepts personal carts on its coaster rails.
 
+## Mob population limits and performance
+
+ThemePark now enforces a **hard maximum of five park-owned entities per species**: park-security iron golems, villagers, zombies, skeletons, and witches. Individual caps cannot be raised above five with config values. When the plugin starts, it removes leftover *ThemePark-tagged* entities across currently loaded chunks (including ones that wandered away from the park); unloaded leftovers are removed when their chunks load. Other plugins' and naturally spawning mobs are not touched.
+
+By default, nighttime also has a stricter **combined limit of nine monsters** across zombies, skeletons, and witches, distributed roughly evenly, rather than allowing all fifteen slots to be filled simultaneously. When nobody is in the park, ThemePark removes its night monsters instead of consuming CPU on their pathfinding and combat; mobs resume spawning when a visitor returns. This keeps the survival mode while cutting idle workload. The scoreboard enemy counter continues to include aggressive park-security golems.
+
+```yaml
+park-security-cap: 5
+park-villager-cap: 5
+park-zombie-cap: 5
+park-skeleton-cap: 5
+park-witch-cap: 5
+night-total-enemies: 9
+```
+
+For an even lighter classroom server, lower `night-total-enemies` to **6** (roughly two of each). The old `night-enemies` key from earlier configuration files is ignored by this version; add the new keys to an existing `server/plugins/ThemePark/config.yml` if you want to customize them. **The default values apply even if the file only contains old keys.** Restart Paper after installing a new JAR. This is a cap for ThemePark-created NPCs, *not* a server-wide cap on mobs introduced by other mods or vanilla spawning.
+
 ## Operator and student commands
 
 | Command | Who | Purpose |
@@ -70,11 +87,16 @@ river-current: true
 river-current-speed: 0.14
 
 
-night-enemies: 16
+park-security-cap: 5
+park-villager-cap: 5
+park-zombie-cap: 5
+park-skeleton-cap: 5
+park-witch-cap: 5
+night-total-enemies: 9
 carousel-degrees-per-second: 24.0
 coaster-blocks-per-tick: 0.46
 ```
 
-**Survival timing and isolation:** enemies exist only between Minecraft times 13000 and 23000. Night waves are limited to `night-enemies` (clamped 3–32) with two replacements at most per seven seconds; the HUD counts living tagged monsters plus hostile park golems, not a global world-wide mob count. Peaceful difficulty prevents hostile creatures from lasting: use Easy/Normal/Hard for survival gameplay. Monsters break only the park's specially constructed wooden shelter blocks when a player is sheltering and an enemy has approached; ordinary park terrain stays protected. Other plugins' golems, villagers and mobs are not altered. No client mod is needed.
+**Survival timing and isolation:** enemies exist only between Minecraft times 13000 and 23000. Night waves are limited to `night-total-enemies` (default 9, maximum 15 across the three species, with no more than 5 of any species) with up to two replacements every seven seconds while visitors are present; the HUD counts living tagged monsters plus hostile park golems, not a global world-wide mob count. Peaceful difficulty prevents hostile creatures from lasting: use Easy/Normal/Hard for survival gameplay. Monsters break only the park's specially constructed wooden shelter blocks when a player is sheltering and an enemy has approached; ordinary park terrain stays protected. Other plugins' golems, villagers and mobs are not altered. No client mod is needed.
 
 A backup and in-game test are still needed: CI checks Java compilation and packaged resources, but it does not simulate Minecraft physics, Eagler client rendering, actual minecart movement, or interactions with other plugin-generated structures.
