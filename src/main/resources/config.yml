@@ -13,9 +13,21 @@ night-barrier: true
 river-current: true
 river-current-speed: 0.14
 
-# Night survival (park-only tagged mobs, without touching other plugins' spawns).
-# Minecraft time 13000-23000 is hostile; sunrise removes enemies and restores cover.
-night-enemies: 16
+# Park-owned NPC caps. No park-security golems, villagers, zombies,
+# skeletons, or witches can exceed 5 of their type, even if configured higher.
+# Only ThemePark-tagged entities are managed; other plugins' NPCs are untouched.
+park-security-cap: 5
+park-villager-cap: 5
+park-zombie-cap: 5
+park-skeleton-cap: 5
+park-witch-cap: 5
+
+# Additional TOTAL night monster limit (zombies + skeletons + witches).
+# Default 9 gives approximately 3 of each instead of 15 at once, reducing lag.
+# To allow all five of each simultaneously, set to 15 (hard per-type caps remain).
+# Enemies only stay spawned while at least one visitor is actually in the park.
+# Replaces the deprecated night-enemies setting.
+night-total-enemies: 9
 
 # A carousel rider is ejected after one full revolution.
 carousel-degrees-per-second: 24.0
